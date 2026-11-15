@@ -2,9 +2,11 @@
 
 **简体中文** | [English](./README.en.md) | [日本語](./README.ja.md)
 
+本仓库 fork 自 [yexi-by/dsh-unrestricted](https://github.com/yexi-by/dsh-unrestricted)，增加**按会话保存的输入框开关，默认开启**。要求 DSH `>=0.2.2-rc.1 <0.2.3-0`。
+
 `dsh-unrestricted` 是 DeepSeek Harness（DSH）的提示词破限插件。它在系统提示词（System Prompt）组装阶段注入破限规则，放开模型在逆向分析、安全测试、敏感题材写作等场景下的拒答限制，让模型直接给出完整的代码与技术方案。
 
-插件提供一个总开关控制规则启停，不改动 DSH 原有的界面布局、工具调用协议、计划模式（Plan Mode）、代码执行（PTC）和子代理逻辑。
+插件在输入框工具栏提供「破限：开／关」按钮，按会话保存选择，默认开启。沿用 DSH 原有界面风格和工具、计划模式、代码执行及子代理机制。
 
 ---
 
@@ -82,11 +84,11 @@ DSH 发起请求时会先组装全局系统提示词（System Prompt）。在普
 
 ### 结构化融合与安全回退
 
-插件按 DSH 官方提示词的结构化段落名称（`deployment:persona-prefix`、`plan:policy`、`tools:ptc-only`、`tool:structured_output`）进行幂等融合，不依赖脆弱的逐字文案哈希校验，兼容最新 DSH Web（`0.2.2-rc.1`）与 DSH Desktop（`0.2.1-rc.5`）。如果自定义模式缺少角色设定段落，对应模式会自动保留原版提示词并在设置页友好提示。
+插件按 DSH 官方提示词的结构化段落名称（`deployment:persona-prefix`、`plan:policy`、`tools:ptc-only`、`tool:structured_output`）进行幂等融合，不依赖脆弱的逐字文案哈希校验，本 fork 面向 DSH `>=0.2.2-rc.1 <0.2.3-0` 的 Web / Desktop 宿主。如果自定义模式缺少角色设定段落，对应模式会自动保留原版提示词并在设置页友好提示。
 
 ### 即时开关
 
-开关状态保存在当前 profile 的 `cordis.patch.yml` 中，切换后从下一次请求开始生效，无需重启服务。关闭开关即恢复官方原版提示词，不会在会话记录中残留标记。
+默认值和各会话的独立选择保存在当前 profile 的 `cordis.patch.yml` 中，切换后从下一次模型请求开始生效，无需重启服务。关闭当前会话的开关会让该会话使用原版提示词，不影响其他会话。正在进行的请求不会被中断。
 
 ---
 
@@ -94,10 +96,10 @@ DSH 发起请求时会先组装全局系统提示词（System Prompt）。在普
 
 ```sh
 # Web 端安装指定版本
-dsh plugin --profile web add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile web add github:chinoll/dsh-unrestricted#v0.3.0
 
 # 桌面端安装指定版本（使用桌面端内置 CLI）
-"& '$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd' plugin --profile desktop add github:yexi-by/dsh-unrestricted#v0.2.8"
+"& '$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd' plugin --profile desktop add github:chinoll/dsh-unrestricted#v0.3.0"
 ```
 
 安装后重启 `dsh web` 或 DSH 桌面端，按下方[使用说明](#使用说明)启用。
@@ -108,7 +110,7 @@ dsh plugin --profile web add github:yexi-by/dsh-unrestricted#v0.2.8
 
 ```sh
 dsh plugin --profile web remove dsh-unrestricted
-dsh plugin --profile web add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile web add github:chinoll/dsh-unrestricted#v0.3.0
 ```
 
 更新后重启 `dsh web` 或 DSH 桌面端。
@@ -131,10 +133,11 @@ dsh plugin --profile web add file:D:/work/dsh/plugin/unrestricted
 
 ## 使用说明
 
-安装后需确认以下两处开关均已开启：
+1. 在左侧「插件」页面启用 `dsh-unrestricted`。
+2. 输入框工具栏的「破限：开／关」按钮只控制当前会话，首次使用默认开启。切换从下一次模型请求生效，选择会持久保存，切换会话或重启后保留；子代理继承所属会话的选择。
+3. 插件详情中的「未单独设置的会话默认开启」仅控制没有独立选择的会话，已单独设置的会话不受影响。
 
-1. **启用插件**：在左侧 **「插件」** 页面找到 `dsh-unrestricted`，打开插件开关。
-2. **启用破限**：点开 `dsh-unrestricted` 详情页，在 **「破限模式」** 卡片中打开 **「启用破限」**。
+升级时保留已有配置：如果旧版曾关闭总开关，新版会将这个值保留为默认值；可在插件详情中重新开启默认值。
 
 设置卡片中同时提供：
 
@@ -152,7 +155,7 @@ dsh plugin --profile web add file:D:/work/dsh/plugin/unrestricted
 ## 本地开发与测试
 
 ```sh
-git clone https://github.com/yexi-by/dsh-unrestricted.git
+git clone https://github.com/chinoll/dsh-unrestricted.git
 cd dsh-unrestricted
 pnpm install
 

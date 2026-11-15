@@ -1,18 +1,18 @@
 {
   "name": "dsh-unrestricted",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "engines": {
-    "dsh": ">=0.2.0-rc.2 <0.2.3-0"
+    "dsh": ">=0.2.2-rc.1 <0.2.3-0"
   },
   "private": true,
   "description": "Toggleable unrestricted mode for DeepSeek Harness: fuses execution rules into the active standard, ptc, cordis, minimal, and subagent prompts",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yexi-by/dsh-unrestricted.git"
+    "url": "https://github.com/chinoll/dsh-unrestricted.git"
   },
-  "homepage": "https://github.com/yexi-by/dsh-unrestricted#readme",
-  "bugs": "https://github.com/yexi-by/dsh-unrestricted/issues",
+  "homepage": "https://github.com/chinoll/dsh-unrestricted#readme",
+  "bugs": "https://github.com/chinoll/dsh-unrestricted/issues",
   "type": "module",
   "main": "src/node.js",
   "exports": {
@@ -45,7 +45,8 @@
         "@deepseek-ai/dsh-api-remotes",
         "@deepseek-ai/dsh-client-ui-renderer",
         "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-client-ui-plugin-manager"
+        "@deepseek-ai/dsh-client-ui-plugin-manager",
+        "@deepseek-ai/dsh-client-ui-conversation"
       ]
     }
   },
@@ -56,6 +57,21 @@
     "dump-prompts": "node tools/dump-prompts.mjs --repo ../../deepseek-harness --out tests/fixtures"
   },
   "devDependencies": {
+    "@deepseek-ai/cordis": "~4.1.0",
+    "@deepseek-ai/dsh-api-remotes": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-connection": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-locale": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-store": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-plugin-manager": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-scope": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-system-prompt": "0.2.2-rc.1",
+    "@deepseek-ai/schemastery": "~3.19.0",
     "@types/node": "^22.20.1",
     "@types/react": "~18.3.1",
     "@types/react-dom": "^18.3.0",

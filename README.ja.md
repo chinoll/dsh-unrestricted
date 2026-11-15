@@ -1,10 +1,12 @@
 # dsh-unrestricted
 
+[yexi-by/dsh-unrestricted](https://github.com/yexi-by/dsh-unrestricted) の fork です。**入力欄に会話ごとのスイッチを追加し、初期値はオン**。DSH `>=0.2.2-rc.1 <0.2.3-0` が必要です。
+
 [简体中文](./README.md) | [English](./README.en.md) | **日本語**
 
 `dsh-unrestricted` は、**DeepSeek Harness (DSH)** 向けのシステムプロンプト制限解除プラグインです。システムプロンプト（System Prompt）の組み立て段階でルールを注入し、リバースエンジニアリング、セキュリティ検証、創作執筆、技術手順における回答拒否を解除して、実行可能なコードと手順を直接出力させます。
 
-単一のスイッチでルール全体を有効・無効にでき、DSH 本来の画面レイアウト、ツール呼び出しプロトコル、計画モード（Plan Mode）、コード実行（PTC）、サブエージェントの仕組みは変更しません。
+入力欄のツールバーに会話ごとのオン／オフボタンを追加し、選択を保存します。初期値はオンです。DSH の既存 UI とツール、Plan Mode、PTC、サブエージェントの仕組みを維持します。
 
 ---
 
@@ -82,11 +84,11 @@ DSH の各実行モードに合わせてプロンプトセクションを処理�
 
 ### 構造化融合とフォールバック
 
-DSH のセクション名（`deployment:persona-prefix`、`plan:policy`、`tools:ptc-only`、`tool:structured_output`）に基づいて構造的かつ冪等に融合を行うため、最新の DSH Web（`0.2.2-rc.1`）および DSH Desktop（`0.2.1-rc.5`）の双方で安定して動作します。ペルソナセクションが存在しない場合は自動的に標準プロンプトへフォールバックします。
+DSH のセクション名（`deployment:persona-prefix`、`plan:policy`、`tools:ptc-only`、`tool:structured_output`）に基づいて構造的かつ冪等に融合を行うため、この fork は DSH `>=0.2.2-rc.1 <0.2.3-0` の Web / Desktop ホストを対象とします。ペルソナセクションが存在しない場合は自動的に標準プロンプトへフォールバックします。
 
 ### 即時切り替え
 
-スイッチの状態は現在のプロファイルの `cordis.patch.yml` に保存され、サービスを再起動せずに次のリクエストから反映されます。オフにすると公式プロンプトへ戻り、会話履歴にマーカーを残しません。
+既定値と会話ごとの選択は現在のプロファイルの `cordis.patch.yml` に保存され、次のモデルリクエストから反映されます。オフにした会話だけが標準プロンプトへ戻り、他の会話には影響しません。進行中のリクエストは中断しません。
 
 ---
 
@@ -94,10 +96,10 @@ DSH のセクション名（`deployment:persona-prefix`、`plan:policy`、`tools
 
 ```sh
 # DSH Web へのインストール
-dsh plugin --profile web add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile web add github:chinoll/dsh-unrestricted#v0.3.0
 
 # DSH Desktop へのインストール
-dsh plugin --profile desktop add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile desktop add github:chinoll/dsh-unrestricted#v0.3.0
 ```
 
 インストール後に `dsh web` または DSH Desktop を再起動し、下記の[使い方](#使い方)に従って有効化します。
@@ -108,7 +110,7 @@ dsh plugin --profile desktop add github:yexi-by/dsh-unrestricted#v0.2.8
 
 ```sh
 dsh plugin --profile web remove dsh-unrestricted
-dsh plugin --profile web add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile web add github:chinoll/dsh-unrestricted#v0.3.0
 ```
 
 更新後に `dsh web` または DSH Desktop を再起動します。
@@ -131,10 +133,11 @@ dsh plugin --profile web add file:D:/work/dsh/plugin/unrestricted
 
 ## 使い方
 
-インストール後、以下の 2 つのスイッチが両方オンになっていることを確認してください：
+1. **「プラグイン」** 画面で `dsh-unrestricted` を有効にします。
+2. 入力欄の **Unrestricted: on/off** ボタンで現在の会話だけを切り替えます。初期値はオンで、次のモデルリクエストから反映されます。選択は会話の切り替えや再起動後も保持され、サブエージェントは親会話の選択を継承します。
+3. プラグイン詳細の **Default for sessions without an override** は、個別の選択がない会話にだけ適用されます。
 
-1. **プラグインの有効化**：左サイドバーの **「プラグイン」** 画面で `dsh-unrestricted` を探し、プラグインのスイッチをオンにします。
-2. **破限の有効化**：`dsh-unrestricted` の詳細画面を開き、**「破限モード」** カード内の **「破限を有効化」** をオンにします。
+更新時は既存設定を保持します。旧版で全体スイッチがオフだった場合は既定値もオフとなるため、必要に応じて詳細画面でオンにしてください。
 
 設定カードでは以下の項目も確認できます：
 
@@ -152,7 +155,7 @@ dsh plugin --profile web add file:D:/work/dsh/plugin/unrestricted
 ## 開発とテスト
 
 ```sh
-git clone https://github.com/yexi-by/dsh-unrestricted.git
+git clone https://github.com/chinoll/dsh-unrestricted.git
 cd dsh-unrestricted
 pnpm install
 

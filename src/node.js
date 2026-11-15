@@ -23,6 +23,8 @@
  *   their assemblies directly.
  */
 import z from '@deepseek-ai/schemastery'
+import { sessionEnabled } from './session-mode.js'
+import { registerRpc } from './rpc.js'
 import { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
 import {
   ANCHORS,
@@ -37,15 +39,15 @@ import {
 export const name = 'dsh-unrestricted'
 
 /** Current plugin package version. */
-export const PLUGIN_VERSION = '0.2.9'
+export const PLUGIN_VERSION = '0.3.0'
 
 /** Services required by this plugin (all base-backed profiles provide these). */
 export const inject = ['settings', 'systemPrompt', 'loader']
 
-const RPC_CHANNEL = '/dsh-unrestricted'
 export const Config = z.object({
-  enabled: z.boolean().default(false),
-}).default({ enabled: false }).volatile()
+  enabled: z.boolean().default(true),
+  sessions: z.dict(z.boolean()).default({}),
+}).default({ enabled: true, sessions: {} }).volatile()
 
 /** Human-readable error text for diagnostics and RPC error branches. */
 function messageOf(error) {
@@ -76,6 +78,10 @@ export function apply(ctx, config) {
     fusedMinimal: fusedMinimalPrompt(),
     /** presetId -> last successfully fused top-level live assembly (the deploy preview). */
     fusedText: new Map(),
+  }
+
+  function enabledFor(sessionId) {
+    return sessionEnabled(config.get(), sessionId, id => ctx.get('agents')?.get?.(id)?.session.header)
   }
 
   /**
@@ -155,7 +161,7 @@ export function apply(ctx, config) {
    * shadow from an earlier blank-session preset selection is disposed.
    */
   function syncMinimalShadow(agent) {
-    if (!state.enabled) {
+    if (!enabledFor(agent.session.id)) {
       unshadowMinimal(agent)
       return
     }
@@ -200,20 +206,6 @@ export function apply(ctx, config) {
   function clearShadows() {
     for (const [, dispose] of state.shadows) dispose()
     state.shadows.clear()
-  }
-
-  function onEnable() {
-    state.runtime.clear()
-    sweepAgents()
-    void ctx.loader.await().then(() => {
-      if (state.enabled) sweepAgents()
-    })
-  }
-
-  function onDisable() {
-    clearShadows()
-    state.runtime.clear()
-    state.fusedText.clear()
   }
 
   /** Current card view: toggle, version, and per-preset state. */
@@ -311,6 +303,13 @@ export function apply(ctx, config) {
   /** RPC endpoint handler for the settings card. */
   async function handleRpc(endpoint, payload) {
     switch (endpoint) {
+      case 'session-status': {
+        const sessionId = payload?.sessionId
+        if (typeof sessionId !== 'string' || !sessionId || sessionId.length > 256) {
+          return { ok: false, error: { code: 'invalid-session', message: 'A session ID is required.' } }
+        }
+        return ok({ enabled: enabledFor(sessionId) })
+      }
       case 'status': {
         return ok(statusPayload())
       }
@@ -321,7 +320,7 @@ export function apply(ctx, config) {
       case 'recheck': {
         state.runtime.clear()
         state.fusedText.clear()
-        if (state.enabled) sweepAgents()
+        sweepAgents()
         return ok(statusPayload())
       }
       default:
@@ -338,9 +337,12 @@ export function apply(ctx, config) {
 
   ctx.on('system-prompt/assemble', async (assembly, context, next) => {
     const original = await next()
-    if (!state.enabled) return original
     const agent = context.agent
     if (agent === undefined) return original
+    if (!enabledFor(agent.session.id)) {
+      unshadowMinimal(agent)
+      return original
+    }
     const presetId = resolveAgentPreset(agent, original.sections)
     if (presetId === undefined || !PRESET_RULES[presetId]) {
       unshadowMinimal(agent)
@@ -384,7 +386,6 @@ export function apply(ctx, config) {
   })
 
   ctx.on('agent/created', ({ agent }) => {
-    if (!state.enabled) return
     syncMinimalShadow(agent)
   })
 
@@ -392,7 +393,7 @@ export function apply(ctx, config) {
     const agent = ctx.get('agents')?.get?.(sessionId)
     if (agent === undefined) return
     state.customMinimal.delete(agent)
-    if (!state.enabled) {
+    if (!enabledFor(agent.session.id)) {
       unshadowMinimal(agent)
       return
     }
@@ -405,26 +406,24 @@ export function apply(ctx, config) {
   })
 
   ctx.effect(() => {
+    let disposed = false
     const unwatch = ctx.on('loader/volatile-update', () => {
-      const enabled = config.get().enabled
-      if (enabled === state.enabled) return
-      state.enabled = enabled
-      if (enabled) onEnable()
-      else onDisable()
+      state.enabled = config.get().enabled
+      state.runtime.clear()
+      state.fusedText.clear()
+      sweepAgents()
     })
-    if (state.enabled) onEnable()
+    sweepAgents()
+    void ctx.loader.await().then(() => { if (!disposed) sweepAgents() })
     return () => {
-      state.enabled = false
+      disposed = true
       unwatch()
       clearShadows()
     }
   }, 'dsh-unrestricted: toggle lifecycle')
 
-  // Web/Desktop 状态通道由官方 Connection 认证；headless 组合无需提供 connection 服务。
+  // Exact Fetch routes use Connection's authenticated /api bridge on Web/Desktop.
   ctx.inject(['connection'], (connectionCtx) => {
-    const disposeRpc = connectionCtx.connection.rpc.handle(RPC_CHANNEL, handleRpc)
-    return async () => {
-      await disposeRpc()
-    }
+    connectionCtx.effect(() => registerRpc(connectionCtx.connection, handleRpc))
   })
 }

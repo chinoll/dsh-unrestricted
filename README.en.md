@@ -1,10 +1,12 @@
 # dsh-unrestricted
 
+Fork of [yexi-by/dsh-unrestricted](https://github.com/yexi-by/dsh-unrestricted), adding a **persistent per-session composer toggle, on by default**. Requires DSH `>=0.2.2-rc.1 <0.2.3-0`.
+
 [简体中文](./README.md) | **English** | [日本語](./README.ja.md)
 
 `dsh-unrestricted` is a system prompt unrestrict plugin for **DeepSeek Harness (DSH)**. It injects unrestrict rules during system prompt assembly, lifting refusal boundaries across reverse engineering, security testing, creative writing, and technical workflows so the model returns complete code and implementations directly.
 
-A single toggle enables or disables the rules without altering DSH's UI layout, tool protocols, Plan Mode, code execution (PTC), or subagent workflow.
+The input toolbar provides an Unrestricted on/off button with a saved choice per session, enabled by default. It follows the existing DSH interface and preserves tool protocols, Plan Mode, PTC, and subagent mechanisms.
 
 ---
 
@@ -82,11 +84,11 @@ The plugin handles each DSH execution preset according to its prompt structure:
 
 ### Structural Fusion & Fallback
 
-The plugin fuses sections structurally by DSH's canonical section names (`deployment:persona-prefix`, `plan:policy`, `tools:ptc-only`, `tool:structured_output`) with idempotency guards, supporting both the latest DSH Web (`0.2.2-rc.1`) and DSH Desktop (`0.2.1-rc.5`) without brittle exact-string hash checks. If a custom preset omits the persona section, it safely falls back to the stock prompt.
+The plugin fuses sections structurally by DSH's canonical section names (`deployment:persona-prefix`, `plan:policy`, `tools:ptc-only`, `tool:structured_output`) with idempotency guards, targeting DSH Web / Desktop hosts in `>=0.2.2-rc.1 <0.2.3-0` without brittle exact-string hash checks. If a custom preset omits the persona section, it safely falls back to the stock prompt.
 
 ### Instant Toggle
 
-The toggle state is saved in the profile's `cordis.patch.yml` and takes effect on the next request without restarting the service. Turning it off restores the stock prompt immediately without leaving markers in session history.
+The default and per-session choices are saved in the profile's `cordis.patch.yml` and take effect on the next model request without restarting the service. Turning a session off restores its stock prompt without changing other sessions. In-flight requests are not interrupted.
 
 ---
 
@@ -94,10 +96,10 @@ The toggle state is saved in the profile's `cordis.patch.yml` and takes effect o
 
 ```sh
 # Install on DSH Web
-dsh plugin --profile web add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile web add github:chinoll/dsh-unrestricted#v0.3.0
 
 # Install on DSH Desktop
-dsh plugin --profile desktop add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile desktop add github:chinoll/dsh-unrestricted#v0.3.0
 ```
 
 Restart `dsh web` or DSH Desktop after installing, then follow [Usage](#usage) to enable it.
@@ -108,7 +110,7 @@ Use the update controls in DSH’s built-in plugin manager, or the CLI commands 
 
 ```sh
 dsh plugin --profile web remove dsh-unrestricted
-dsh plugin --profile web add github:yexi-by/dsh-unrestricted#v0.2.8
+dsh plugin --profile web add github:chinoll/dsh-unrestricted#v0.3.0
 ```
 
 Restart `dsh web` or DSH Desktop.
@@ -131,10 +133,11 @@ dsh plugin --profile web add file:D:/work/dsh/plugin/unrestricted
 
 ## Usage
 
-Make sure both switches are turned on after installation:
+1. Enable `dsh-unrestricted` on the **Plugins** page.
+2. Use **Unrestricted: on/off** in the input toolbar to change only the current session. It starts on, applies to the next model request, and persists across session switches and restarts. Delegated subagents inherit their parent session’s choice.
+3. **Default for sessions without an override** in plugin details changes only sessions without an explicit choice.
 
-1. **Enable Plugin**: Open **Plugins** in the left sidebar, find `dsh-unrestricted`, and turn on the plugin switch.
-2. **Enable Rules**: Click `dsh-unrestricted` to open its settings card and turn on **"Enable unrestricted mode"**.
+Upgrades preserve existing configuration: an old disabled global switch becomes a disabled default. Enable the default in plugin details if desired.
 
 The settings card also provides:
 
@@ -152,7 +155,7 @@ The settings card also provides:
 ## Development & Testing
 
 ```sh
-git clone https://github.com/yexi-by/dsh-unrestricted.git
+git clone https://github.com/chinoll/dsh-unrestricted.git
 cd dsh-unrestricted
 pnpm install
 

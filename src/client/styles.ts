@@ -6,6 +6,33 @@
  */
 
 const CSS = `
+.dsh-unrestricted-sessionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--dsw-radius-md, 8px);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.dsh-unrestricted-sessionButton[data-enabled="true"] {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.dsh-unrestricted-sessionButton:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.dsh-unrestricted-sessionButton:focus-visible {
+  outline: 2px solid var(--dsw-alias-label-primary);
+  outline-offset: 2px;
+}
+.dsh-unrestricted-sessionButton:disabled { opacity: .6; cursor: default; }
+.dsh-unrestricted-sessionButton[data-error="true"] { color: var(--dsw-alias-state-error-primary); }
 .dsh-unrestricted-root {
   display: flex;
   flex-direction: column;

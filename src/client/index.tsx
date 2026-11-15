@@ -10,6 +10,10 @@ import { createUnrestrictedController } from './controller.ts'
 import { en, NS, zh, type UnrestrictedLocaleKey } from './locales.ts'
 import { ensureStyles } from './styles.ts'
 import { UnrestrictedCard } from './UnrestrictedCard.tsx'
+import { SessionToggle } from './SessionToggle.tsx'
+import type { UnrestrictedSettings } from './controller.ts'
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -32,4 +36,21 @@ export function apply(ctx: Context): void {
     locale: NS,
     inject: () => controller.face(),
   }, UnrestrictedCard))
+  ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
+    name: 'conversation.input.left',
+    id: 'dsh-unrestricted-session',
+    order: 100,
+    locale: NS,
+    inject: (sessionId) => ({
+      sessionId,
+      settings: ctx.configForms.get<UnrestrictedSettings>('unrestricted'),
+      read: async () => {
+        const connection = ctx.get('connection') as ConnectionHandle
+        const result = await connection.rpc.call('/api', 'dsh-unrestricted/session-status', { sessionId }) as
+          { ok: true; value: { enabled: boolean } } | { ok: false; error: { message: string } }
+        if (!result.ok) throw new Error(result.error.message)
+        return result.value.enabled
+      },
+    }),
+  }, SessionToggle))
 }

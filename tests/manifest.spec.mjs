@@ -12,8 +12,9 @@ test('declares the current client renderer, settings dependencies, and Web + Des
     '@deepseek-ai/dsh-client-ui-renderer',
     '@deepseek-ai/dsh-client-ui-settings',
     '@deepseek-ai/dsh-client-ui-plugin-manager',
+    '@deepseek-ai/dsh-client-ui-conversation',
   ])
   assert.equal(manifest.dsh.client.platform, 'web')
   assert.equal(manifest.dsh.bundle.patch, './cordis.patch.yml')
-  assert.equal(manifest.engines.dsh, '>=0.2.0-rc.2 <0.2.3-0')
+  assert.equal(manifest.engines.dsh, '>=0.2.2-rc.1 <0.2.3-0')
 })

@@ -12,6 +12,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 /** The toggle section stored in the `unrestricted` settings namespace. */
 export interface UnrestrictedSettings {
   enabled?: boolean
+  sessions?: Record<string, boolean>
 }
 
 /** Per-preset fusion state reported by the host half. */
@@ -95,7 +96,7 @@ export interface UnrestrictedCardInjected {
   loadPreview: (presetId: string) => Promise<void>
 }
 
-const RPC_CHANNEL = '/dsh-unrestricted'
+const RPC_CHANNEL = '/api'
 const SETTINGS_NS = 'unrestricted'
 
 /** Human-readable error text for the banner. */
@@ -135,7 +136,7 @@ export function createUnrestrictedController(ctx: Context) {
 
   function publish(): void {
     const settingsSnapshot = settings.getSnapshot()
-    const enabled = settingsSnapshot.value?.enabled === true
+    const enabled = settingsSnapshot.value?.enabled !== false
     if (enabled !== snapshot.enabled) invalidatePreviews()
     snapshot = {
       enabled,
@@ -155,7 +156,7 @@ export function createUnrestrictedController(ctx: Context) {
   }
 
   async function call<T>(endpoint: string, payload: unknown): Promise<T> {
-    const result = await connection.rpc.call(RPC_CHANNEL, endpoint, payload) as RpcResult<T>
+    const result = await connection.rpc.call(RPC_CHANNEL, `dsh-unrestricted/${endpoint}`, payload) as RpcResult<T>
     if (!result.ok) throw new Error(result.error.message)
     return result.value
   }
